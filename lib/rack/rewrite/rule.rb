@@ -113,9 +113,16 @@ module Rack
 
       def matches?(rack_env) #:nodoc:
         return false if options[:if].respond_to?(:call) && !options[:if].call(rack_env)
-        path = build_path_from_env(rack_env)
 
-        self.match_options?(rack_env) && string_matches?(path, self.from)
+        path = build_path_from_env(rack_env)
+        return false unless match_options?(rack_env) && string_matches?(path, from)
+
+        if from.is_a?(Regexp) && options[:when].respond_to?(:call)
+          matches = match(path)
+          options[:when].call(matches, rack_env) if matches
+        else
+          true
+        end
       end
 
       def from
